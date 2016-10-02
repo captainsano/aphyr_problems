@@ -26,4 +26,4 @@
         (cons d (get-primes primes r)))))
    [] (drop 2 (range))))
 
-(take 20 prime-nums)
+(take 10 prime-nums)
