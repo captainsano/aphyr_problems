@@ -2,15 +2,15 @@
 ;; given an hour of the day, returns what you’ll be doing at that time. (schedule 18),
 ;; for me, returns :dinner.
 (defn schedule [hour]
-  (cond
-    (< hour 6)   :sleep
-    (< hour 8)   :getting-ready-and-breakfast
-    (< hour 9)   :commute
-    (< hour 18)  :office-work
-    (< hour 19)  :commute
-    (< hour 20)  :home-dinner
-    (< hour 22)  :learn-new-stuff
-    (<= hour 24) :sleep))
+  (condp < hour
+    6     :sleep
+    8     :getting-ready-and-breakfast
+    9     :commute
+    18    :office-work
+    19    :commute
+    20    :home-dinner
+    22    :learn-new-stuff
+    :else :sleep))
 
 ;; 2. Using the threading macros, find how many numbers from 0 to 9999 are palindromes:
 ;; identical when written forwards and backwards. 121 is a palindrome, as is 7447 and 5,
