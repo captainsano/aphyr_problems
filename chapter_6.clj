@@ -6,16 +6,24 @@
 ;; 1. Use delay to compute this sum lazily; show that it takes no time to return
 ;; the delay, but roughly 1 second to deref.
 (defn sum [start end]
-  (delay (reduce + (range start end))))
+  (reduce + (range start end)))
 
-(def result (sum 0 1e7))
+(def delayed-result (delay (sum 0 1e7)))
 
-(time (deref result))
+(time (deref delayed-result))
 
 ;; 2. We can do the computation in a new thread directly, using
 ;; (.start (Thread. (fn [] (sum 0 1e7)))–but this simply runs the (sum) function
 ;; and discards the results. Use a promise to hand the result back out of
 ;; the thread. Use this technique to write your own version of the future macro.
+(defn sum2 [start end]
+  (let [result (promise)]
+    (.start (Thread. (fn [] (deliver result (sum start end)))))
+    result))
+
+(def promised-result (sum2 0 1e7))
+
+(time (deref (promise-sum)))
 
 
 ;; 3. If your computer has two cores, you can do this expensive computation
