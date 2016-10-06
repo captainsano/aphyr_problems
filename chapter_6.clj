@@ -23,14 +23,20 @@
 
 (def promised-result (sum2 0 1e7))
 
-(time (deref (promise-sum)))
-
+(time (deref promised-result))
 
 ;; 3. If your computer has two cores, you can do this expensive computation
 ;; twice as fast by splitting it into two parts: (sum 0 (/ 1e7 2)),
 ;; and (sum (/ 1e7 2) 1e7), then adding those parts together. Use future to do
 ;; both parts at once, and show that this strategy gets the same answer as
 ;; the single-threaded version, but takes roughly half the time.
+(defn split-sum []
+  (let [m (future (/ 1e7 2))]
+    (+ (deref (future (sum 0 (deref m))))
+       (deref (future (sum (deref m) 1e7))))))
+
+(time (split-sum))
+(time (sum 0 1e7))
 
 ;; 4. Instead of using reduce, store the sum in an atom and use two futures to
 ;; add each number from the lower and upper range to that atom. Wait for both
