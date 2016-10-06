@@ -25,6 +25,8 @@
 
 (time (deref promised-result))
 
+;; TODO: Future macro
+
 ;; 3. If your computer has two cores, you can do this expensive computation
 ;; twice as fast by splitting it into two parts: (sum 0 (/ 1e7 2)),
 ;; and (sum (/ 1e7 2) 1e7), then adding those parts together. Use future to do
@@ -43,6 +45,17 @@
 ;; futures to complete using deref, then check that the atom contains the right
 ;; number. Is this technique faster or slower than reduce? Why do you think that
 ;; might be?
+(defn sum-without-reduce [start end]
+  (let [sum-atom    (atom 0)
+        middle      (/ end 2)
+        lower-range (range start middle)
+        upper-range (range middle end)
+        lower-sum   (future (loop [xs lower-range] (when-let [n (first xs)] (do (swap! sum-atom + n) (recur (rest xs))))))
+        upper-sum   (future (loop [xs upper-range] (when-let [n (first xs)] (do (swap! sum-atom + n) (recur (rest xs))))))]
+    (do (deref lower-sum) (deref upper-sum))
+    (deref sum-atom)))
+
+(time (sum-without-reduce 0 1e7))
 
 ;;  Instead of using a lazy list, imagine two threads are removing tasks from
 ;; a pile of work. Our work pile will be the list of all integers
@@ -57,3 +70,23 @@
 ;; over again until there’s no work left. Verify that @sum is 4999950000.
 ;; Experiment with different combinations of alter and commute–if both are
 ;; correct, is one faster? Does using deref instead of ensure change the result?
+(def work (ref (apply list (range 1e5))))
+(def sum (ref 0))
+
+(defn do-some-work-alter []
+  (dosync
+   (let [n (first @work)]
+     (alter sum + n)
+     (alter work rest))))
+
+(defn do-some-work-commute []
+  (dosync
+   (let [n (first @work)]
+     (commute sum + n)
+     (commute work rest))))
+
+(time (while (not (empty? @work))
+        (do-some-work-alter)))
+
+(time (while (not (empty? @work))
+        (do-some-work-commute)))
