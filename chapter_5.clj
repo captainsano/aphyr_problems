@@ -1,29 +1,43 @@
-;; 1. Write a function to find out if a string is a palindrome–that is, if it looks the same forwards and backwards.
-(defn palindrome? [input]
-  (= (seq input) (reverse input)))
+;; 1. Using the control flow constructs we’ve learned, write a schedule function which,
+;; given an hour of the day, returns what you’ll be doing at that time. (schedule 18),
+;; for me, returns :dinner.
+(defn schedule [hour]
+  (condp < hour
+    6     :sleep
+    8     :getting-ready-and-breakfast
+    9     :commute
+    18    :office-work
+    19    :commute
+    20    :home-dinner
+    22    :learn-new-stuff
+    :else :sleep))
 
-;; 2. Find the number of ‘c’s in “abracadabra”.
-(reduce #(if (= \c %2) (inc %1) %1) 0 "abracadabra")
+;; 2. Using the threading macros, find how many numbers from 0 to 9999 are palindromes:
+;; identical when written forwards and backwards. 121 is a palindrome, as is 7447 and 5,
+;; but not 12 or 953.
+(defn palindrome? [n]
+  (-> n str reverse clojure.string/join Integer. (= n)))
 
-;; 3. Write your own version of filter.
-(defn my-filter [filter-fn input-seq]
-  (lazy-seq
-   (when-let [s (seq input-seq)]
-     (let [f (first s) r (rest s)]
-       (if (filter-fn f)
-         (cons f (my-filter filter-fn r))
-         (my-filter filter-fn r))))))
+(->> (range 10000) (filter palindrome?) count)
 
-(take 10 (my-filter odd? (range)))
-(take 10 (filter odd? (range)))
+;; 3. Write a macro id which takes a function and a list of args: (id f a b c), and
+;; returns an expression which calls that function with the given args: (f a b c).
+(defmacro id [f & args]
+  `(~f ~@args))
 
-;; 4. Find the first 100 prime numbers: 2, 3, 5, 7, 11, 13, 17, ....
-(def prime-nums
-  ((fn get-primes [primes sieve]
-     (lazy-seq
-      (let [d (first sieve)
-            r (filter #(pos? (mod % d)) (rest sieve))]
-        (cons d (get-primes primes r)))))
-   [] (drop 2 (range))))
+;; 4. Write a macro log which uses a var, logging-enabled, to determine whether or not
+;; to print an expression to the console at compile time. If logging-enabled is false,
+;; (log :hi) should macroexpand to nil. If logging-enabled is true, (log :hi) should
+;; macroexpand to (prn :hi). Why would you want to do this check during compilation,
+;; instead of when running the program? What might you lose?
+(def logging-enabled true)
 
-(take 10 prime-nums)
+(defmacro log [x]
+  (if logging-enabled `(prn ~x) nil))
+
+;; 5. (Advanced) Using the rationalize function, write a macro exact which rewrites any
+;; use of +, -, *, or / to force the use of ratios instead of floating-point numbers.
+;; (* 2452.45 100) returns 245244.99999999997, but (exact (* 2452.45 100)) should
+;; return 245245N
+(defmacro exact [[op & args]]
+  `(~op ~@(map rationalize args)))
